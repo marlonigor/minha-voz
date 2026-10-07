@@ -1,0 +1,98 @@
+[
+  {
+    "id": "agua",
+    "rotulo": "ÁGUA",
+    "frase": "Eu quero água, por favor.",
+    "pictograma": "pictograma_agua",
+    "corFundoHex": "#1E88E5",
+    "corTextoHex": "#FFFFFF",
+    "urgencia": "NORMAL",
+    "arquivoVoz": "voz_agua.ogg",
+    "posicao": 1,
+    "barraFixa": false
+  },
+  {
+    "id": "comida",
+    "rotulo": "COMIDA",
+    "frase": "Estou com fome.",
+    "pictograma": "pictograma_comida",
+    "corFundoHex": "#FB8C00",
+    "corTextoHex": "#000000",
+    "urgencia": "NORMAL",
+    "arquivoVoz": "voz_comida.ogg",
+    "posicao": 2,
+    "barraFixa": false
+  },
+  {
+    "id": "remedio",
+    "rotulo": "REMÉDIO",
+    "frase": "Quero meu remédio.",
+    "pictograma": "pictograma_remedio",
+    "corFundoHex": "#8E24AA",
+    "corTextoHex": "#FFFFFF",
+    "urgencia": "NORMAL",
+    "arquivoVoz": "voz_remedio.ogg",
+    "posicao": 3,
+    "barraFixa": false
+  },
+  {
+    "id": "banheiro",
+    "rotulo": "BANHEIRO",
+    "frase": "Preciso ir ao banheiro agora.",
+    "pictograma": "pictograma_banheiro",
+    "corFundoHex": "#FDD835",
+    "corTextoHex": "#000000",
+    "urgencia": "URGENTE",
+    "arquivoVoz": "voz_banheiro.ogg",
+    "posicao": 4,
+    "barraFixa": false
+  },
+  {
+    "id": "dor",
+    "rotulo": "DOR",
+    "frase": "Estou com dor. Preciso de ajuda.",
+    "pictograma": "pictograma_dor",
+    "corFundoHex": "#E53935",
+    "corTextoHex": "#FFFFFF",
+    "urgencia": "URGENTE",
+    "arquivoVoz": "voz_dor.ogg",
+    "posicao": 5,
+    "barraFixa": false
+  },
+  {
+    "id": "ajuda",
+    "rotulo": "AJUDA",
+    "frase": "Preciso de ajuda. Venha aqui.",
+    "pictograma": "pictograma_ajuda",
+    "corFundoHex": "#D81B60",
+    "corTextoHex": "#FFFFFF",
+    "urgencia": "URGENTE",
+    "arquivoVoz": "voz_ajuda.ogg",
+    "posicao": 6,
+    "barraFixa": false
+  },
+  {
+    "id": "sim",
+    "rotulo": "SIM",
+    "frase": "Sim.",
+    "pictograma": "pictograma_sim",
+    "corFundoHex": "#43A047",
+    "corTextoHex": "#FFFFFF",
+    "urgencia": "NORMAL",
+    "arquivoVoz": "voz_sim.ogg",
+    "posicao": 7,
+    "barraFixa": true
+  },
+  {
+    "id": "nao",
+    "rotulo": "NÃO",
+    "frase": "Não.",
+    "pictograma": "pictograma_nao",
+    "corFundoHex": "#424242",
+    "corTextoHex": "#FFFFFF",
+    "urgencia": "NORMAL",
+    "arquivoVoz": "voz_nao.ogg",
+    "posicao": 8,
+    "barraFixa": true
+  }
+]
