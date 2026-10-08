@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+cd "${ROOT_DIR}"
+
+echo "Checking environment prerequisites..."
+if ! command -v java >/dev/null 2>&1; then
+    echo "Error: Java runtime not found in PATH." >&2
+    exit 1
+fi
+
+chmod +x gradlew || true
+
+echo "Building release APK and App Bundle artifacts..."
+./gradlew assembleRelease bundleRelease --stacktrace
+
+echo "Release build completed successfully."
+echo "Artifacts available in app/build/outputs/apk/release/ and app/build/outputs/bundle/release/."
