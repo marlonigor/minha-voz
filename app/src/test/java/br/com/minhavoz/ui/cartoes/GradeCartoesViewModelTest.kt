@@ -21,7 +21,7 @@ import org.junit.Test
 
 /**
  * Testes unitarios para [GradeCartoesViewModel].
- * Valida carregamento inicial, fluxo de selecao e protecao de repeticao (RF-06).
+ * Valida carregamento inicial, fluxo de selecao, protecao de repeticao e fechamento automatico.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class GradeCartoesViewModelTest {
@@ -114,6 +114,37 @@ class GradeCartoesViewModelTest {
         viewModel.selecionarCartao(cartaoAgua)
         viewModel.fecharDetalhe()
 
+        assertNull(viewModel.uiState.value.cartaoEmDetalhe)
+    }
+
+    @Test
+    fun deveFecharCartaoNormalAutomaticamenteAposTimeout() = runTest {
+        val viewModel = GradeCartoesViewModel(
+            cartaoRepository = repository,
+            tempoFechamentoNormalMs = 1000L
+        )
+        viewModel.selecionarCartao(cartaoAgua)
+        assertNotNull(viewModel.uiState.value.cartaoEmDetalhe)
+
+        testDispatcher.scheduler.advanceTimeBy(1001L)
+        assertNull(viewModel.uiState.value.cartaoEmDetalhe)
+    }
+
+    @Test
+    fun deveReiniciarTimeoutAoRepetirCartao() = runTest {
+        val viewModel = GradeCartoesViewModel(
+            cartaoRepository = repository,
+            tempoFechamentoNormalMs = 1000L
+        )
+        viewModel.selecionarCartao(cartaoAgua)
+
+        testDispatcher.scheduler.advanceTimeBy(600L)
+        viewModel.repetirCartaoAtual()
+
+        testDispatcher.scheduler.advanceTimeBy(600L)
+        assertNotNull(viewModel.uiState.value.cartaoEmDetalhe)
+
+        testDispatcher.scheduler.advanceTimeBy(401L)
         assertNull(viewModel.uiState.value.cartaoEmDetalhe)
     }
 

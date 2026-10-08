@@ -1,17 +1,27 @@
 package br.com.minhavoz.ui.cartoes
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,17 +48,30 @@ fun CartaoItemView(
     val haptic: HapticFeedback = LocalHapticFeedback.current
     val fundo: Color = parseHexColor(cartao.corFundoHex)
     val textoCor: Color = parseHexColor(cartao.corTextoHex, Color.White)
+    val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
+    val isPressed: Boolean by interactionSource.collectIsPressedAsState()
+    val isUrgente: Boolean = cartao.urgencia == NivelUrgencia.URGENTE
+
+    val progressoAnimado: Float by animateFloatAsState(
+        targetValue = if (isPressed && isUrgente) 1f else 0f,
+        animationSpec = tween(durationMillis = 800, easing = LinearEasing),
+        label = "progressoToqueLongo"
+    )
 
     Box(
         modifier = modifier
             .defaultMinSize(minHeight = 96.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(fundo)
-            .configurarClique(cartao, haptic, onAtivar)
+            .configurarClique(cartao, haptic, interactionSource, onAtivar)
             .padding(12.dp),
         contentAlignment = Alignment.Center
     ) {
-        CartaoConteudoTexto(cartao = cartao, corTexto = textoCor)
+        CartaoConteudoTexto(
+            cartao = cartao,
+            corTexto = textoCor,
+            progresso = progressoAnimado
+        )
     }
 }
 
@@ -56,10 +79,13 @@ fun CartaoItemView(
 private fun Modifier.configurarClique(
     cartao: Cartao,
     haptic: HapticFeedback,
+    interactionSource: MutableInteractionSource,
     onAtivar: (Cartao) -> Unit
 ): Modifier {
     val isUrgente: Boolean = cartao.urgencia == NivelUrgencia.URGENTE
     return this.combinedClickable(
+        interactionSource = interactionSource,
+        indication = null,
         onClick = {
             if (!isUrgente) {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -76,7 +102,11 @@ private fun Modifier.configurarClique(
 }
 
 @Composable
-private fun CartaoConteudoTexto(cartao: Cartao, corTexto: Color) {
+private fun CartaoConteudoTexto(
+    cartao: Cartao,
+    corTexto: Color,
+    progresso: Float
+) {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -90,14 +120,30 @@ private fun CartaoConteudoTexto(cartao: Cartao, corTexto: Color) {
             textAlign = TextAlign.Center
         )
         if (cartao.urgencia == NivelUrgencia.URGENTE) {
-            Text(
-                text = "TOQUE LONGO",
-                color = corTexto.copy(alpha = 0.85f),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 4.dp)
-            )
+            SubtituloUrgencia(corTexto = corTexto, progresso = progresso)
         }
+    }
+}
+
+@Composable
+private fun SubtituloUrgencia(corTexto: Color, progresso: Float) {
+    Text(
+        text = "TOQUE LONGO",
+        color = corTexto.copy(alpha = 0.85f),
+        fontSize = 14.sp,
+        fontWeight = FontWeight.SemiBold,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(top = 4.dp)
+    )
+    if (progresso > 0f) {
+        LinearProgressIndicator(
+            progress = { progresso },
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .height(4.dp)
+                .padding(top = 2.dp),
+            color = corTexto,
+            trackColor = corTexto.copy(alpha = 0.25f)
+        )
     }
 }
