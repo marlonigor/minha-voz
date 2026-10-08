@@ -1,16 +1,49 @@
+# Built application files and binaries
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Java and Kotlin files
+*.class
+.kotlin/
+
+# Android Studio and IntelliJ IDEA
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
+*.ipr
+*.iws
+out/
+
+# VS Code
+.vscode/
+
+# Gradle files and cache
+.gradle/
 build/
 captures/
-.externalNativeBuild
-.cxx
+gradle-app.setting
+.gradletasknamecache
+
+# Keep Gradle wrapper jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Native build artifacts
+.externalNativeBuild/
+.cxx/
+
+# Environment, secrets, and keystores
 local.properties
-.kotlin
+signing.properties
+key.properties
+*.jks
+*.keystore
+
+# Log files and crash dumps
+*.log
+*.hprof
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini

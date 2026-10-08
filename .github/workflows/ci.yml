@@ -22,7 +22,7 @@ jobs:
           java-version: 17
 
       - name: Configure Gradle
-        uses: actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Grant execute permissions
         run: chmod +x gradlew bin/setup bin/test
