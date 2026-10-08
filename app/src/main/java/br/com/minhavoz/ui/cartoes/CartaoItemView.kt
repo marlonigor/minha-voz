@@ -12,11 +12,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,7 +39,7 @@ import br.com.minhavoz.core.model.Cartao
 import br.com.minhavoz.core.model.NivelUrgencia
 
 /**
- * Componente visual para exibicao e interacao de um cartao de comunicacao.
+ * Componente visual para exibicao e interacao de um cartao de comunicacao com pictograma e texto.
  */
 @Composable
 fun CartaoItemView(
@@ -64,10 +66,10 @@ fun CartaoItemView(
             .clip(RoundedCornerShape(16.dp))
             .background(fundo)
             .configurarClique(cartao, haptic, interactionSource, onAtivar)
-            .padding(12.dp),
+            .padding(10.dp),
         contentAlignment = Alignment.Center
     ) {
-        CartaoConteudoTexto(
+        CartaoConteudo(
             cartao = cartao,
             corTexto = textoCor,
             progresso = progressoAnimado
@@ -102,21 +104,34 @@ private fun Modifier.configurarClique(
 }
 
 @Composable
-private fun CartaoConteudoTexto(
+private fun CartaoConteudo(
     cartao: Cartao,
     corTexto: Color,
     progresso: Float
 ) {
+    val tamanhoFonte = if (cartao.rotulo.length > 7) 24.sp else 30.sp
+    val iconeRes = resolverRecursoPictograma(cartao.pictograma)
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Icon(
+            painter = painterResource(id = iconeRes),
+            contentDescription = cartao.rotulo,
+            tint = corTexto,
+            modifier = Modifier
+                .size(40.dp)
+                .padding(bottom = 4.dp)
+        )
         Text(
             text = cartao.rotulo.uppercase(),
             color = corTexto,
-            fontSize = 32.sp,
+            fontSize = tamanhoFonte,
             fontWeight = FontWeight.Bold,
+            maxLines = 1,
             textAlign = TextAlign.Center
         )
         if (cartao.urgencia == NivelUrgencia.URGENTE) {
@@ -130,10 +145,10 @@ private fun SubtituloUrgencia(corTexto: Color, progresso: Float) {
     Text(
         text = "TOQUE LONGO",
         color = corTexto.copy(alpha = 0.85f),
-        fontSize = 14.sp,
+        fontSize = 12.sp,
         fontWeight = FontWeight.SemiBold,
         textAlign = TextAlign.Center,
-        modifier = Modifier.padding(top = 4.dp)
+        modifier = Modifier.padding(top = 2.dp)
     )
     if (progresso > 0f) {
         LinearProgressIndicator(

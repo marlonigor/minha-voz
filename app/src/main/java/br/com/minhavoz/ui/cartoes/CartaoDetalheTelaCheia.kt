@@ -11,14 +11,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,7 +30,7 @@ import br.com.minhavoz.core.model.Cartao
 import br.com.minhavoz.core.model.NivelUrgencia
 
 /**
- * Exibe o cartao ativado em tela cheia com botoes acessiveis de repeticao e fechamento (RF-03).
+ * Exibe o cartao ativado em tela cheia com pictograma ampliado e botoes de acao (RF-03).
  */
 @Composable
 fun CartaoDetalheTelaCheia(
@@ -58,10 +61,11 @@ fun CartaoDetalheTelaCheia(
 
 @Composable
 private fun DetalheCentro(cartao: Cartao, textoCor: Color) {
+    val iconeRes = resolverRecursoPictograma(cartao.pictograma)
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 48.dp),
+            .padding(top = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (cartao.urgencia == NivelUrgencia.URGENTE) {
@@ -72,8 +76,16 @@ private fun DetalheCentro(cartao: Cartao, textoCor: Color) {
                 color = textoCor,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
         }
+        Icon(
+            painter = painterResource(id = iconeRes),
+            contentDescription = cartao.rotulo,
+            tint = textoCor,
+            modifier = Modifier
+                .size(108.dp)
+                .padding(bottom = 16.dp)
+        )
         Text(
             text = cartao.rotulo.uppercase(),
             fontSize = 72.sp,
@@ -81,7 +93,7 @@ private fun DetalheCentro(cartao: Cartao, textoCor: Color) {
             color = textoCor,
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         Text(
             text = "\"${cartao.frase}\"",
             fontSize = 28.sp,

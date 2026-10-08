@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -100,7 +102,7 @@ private fun GradeMatrizCartoes(
                         onAtivar = onSelecionarCartao,
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxSize()
+                            .fillMaxHeight()
                     )
                 }
             }
@@ -114,7 +116,9 @@ private fun BarraFixaAcoes(
     onSelecionarCartao: (Cartao) -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(112.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         for (cartao in cartoes) {
@@ -123,6 +127,7 @@ private fun BarraFixaAcoes(
                 onAtivar = onSelecionarCartao,
                 modifier = Modifier
                     .weight(1f)
+                    .fillMaxHeight()
             )
         }
     }
