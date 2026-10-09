@@ -20,7 +20,8 @@ import br.com.minhavoz.core.audio.GerenciadorChamadoUrgente
 import br.com.minhavoz.core.audio.OrquestradorAudioCartao
 import br.com.minhavoz.core.audio.PadraoGerenciadorChamadoUrgente
 import br.com.minhavoz.core.data.AssetJsonDataSource
-import br.com.minhavoz.core.data.JsonCartaoRepository
+import br.com.minhavoz.core.data.RoomCartaoRepository
+import br.com.minhavoz.core.data.local.MinhaVozDatabase
 import br.com.minhavoz.core.feedback.AndroidControladorFeedbackTatil
 import br.com.minhavoz.ui.cartoes.GradeCartoesScreen
 import br.com.minhavoz.ui.cartoes.GradeCartoesViewModel
@@ -35,7 +36,8 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: GradeCartoesViewModel by viewModels {
         val dataSource = AssetJsonDataSource(applicationContext, "cartoes.json")
-        val repository = JsonCartaoRepository(dataSource)
+        val database = MinhaVozDatabase.construir(applicationContext)
+        val repository = RoomCartaoRepository(database.cartaoDao(), dataSource)
         val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         val audioFocusController = AudioFocusController(audioManager)
         val audioPlayer = criarAudioPlayer(audioFocusController)

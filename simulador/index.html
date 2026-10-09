@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>MinhaVoz - Simulador de Teste Interativo</title>
+    <style>
+        :root {
+            --bg-app: #121214;
+            --surface-bg: #1e1e24;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --radius-card: 20px;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: var(--font-stack);
+        }
+
+        body {
+            background-color: #09090b;
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .header-bar {
+            text-align: center;
+            margin-bottom: 16px;
+            max-width: 480px;
+            width: 100%;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+        }
+
+        .header-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .phone-frame {
+            position: relative;
+            width: 100%;
+            max-width: 440px;
+            height: 820px;
+            background: var(--bg-app);
+            border-radius: 36px;
+            border: 4px solid #2d2d38;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-notch {
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #888899;
+            background: rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .grid-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: repeat(4, 1fr);
+            gap: 12px;
+            padding: 12px;
+        }
+
+        .card-btn {
+            position: relative;
+            border-radius: var(--radius-card);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            color: #ffffff;
+            transition: transform 0.15s ease, filter 0.15s ease;
+            outline: none;
+            overflow: hidden;
+        }
+
+        .card-btn:active {
+            transform: scale(0.96);
+            filter: brightness(0.92);
+        }
+
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            margin-bottom: 8px;
+            fill: currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: currentColor;
+        }
+
+        .card-label {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .card-badge {
+            margin-top: 6px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 99px;
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        /* Cartoes e cores */
+        .card-agua { background-color: #1976D2; }
+        .card-comida { background-color: #F57C00; }
+        .card-remedio { background-color: #7B1FA2; }
+        .card-banheiro { background-color: #FBC02D; color: #111111; }
+        .card-banheiro .card-badge { background: rgba(0, 0, 0, 0.15); }
+        .card-dor { background-color: #D32F2F; }
+        .card-ajuda { background-color: #C2185B; }
+        .card-sim { background-color: #388E3C; }
+        .card-nao { background-color: #455A64; }
+
+        /* Anel de progresso para cartoes urgentes */
+        .progress-ring-container {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        .progress-ring-svg {
+            width: 90%;
+            height: 90%;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            fill: transparent;
+            stroke: rgba(255, 255, 255, 0.85);
+            stroke-width: 8;
+            stroke-dasharray: 283;
+            stroke-dashoffset: 283;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.8s linear;
+        }
+
+        .card-banheiro .progress-ring-circle {
+            stroke: rgba(0, 0, 0, 0.85);
+        }
+
+        .card-btn.pressing .progress-ring-container {
+            opacity: 1;
+        }
+
+        .card-btn.pressing .progress-ring-circle {
+            stroke-dashoffset: 0;
+        }
+
+        /* Toast de aviso */
+        .toast-msg {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(50px);
+            background: rgba(20, 20, 25, 0.95);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 10px 18px;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            pointer-events: none;
+            opacity: 0;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+            z-index: 50;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .toast-msg.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Tela Cheia de Detalhe */
+        .fullscreen-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 48px 24px 32px;
+            transform: scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+
+        .fullscreen-overlay.active {
+            transform: scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .overlay-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .overlay-icon {
+            width: 96px;
+            height: 96px;
+            margin-bottom: 24px;
+        }
+
+        .overlay-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: currentColor;
+        }
+
+        .overlay-title {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            line-height: 1.1;
+        }
+
+        .overlay-phrase {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 16px;
+            max-width: 340px;
+            line-height: 1.4;
+            opacity: 0.95;
+        }
+
+        .overlay-alarm-badge {
+            display: none;
+            margin-top: 18px;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 6px 16px;
+            border-radius: 99px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            animation: pulse-alarm 1s infinite alternate;
+        }
+
+        @keyframes pulse-alarm {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.06); opacity: 1; }
+        }
+
+        .overlay-actions {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .action-btn {
+            height: 68px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: transform 0.15s ease, filter 0.15s ease;
+        }
+
+        .action-btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-repeat {
+            background-color: #ffffff;
+            color: #111116;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-close {
+            background-color: #111116;
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-btn svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-bar">
+        <h1 class="header-title">MinhaVoz - Simulador do Usuário</h1>
+        <p class="header-desc">Clique nos cartões para falar ou segure por 800 ms nos cartões de urgência.</p>
+    </div>
+
+    <div class="phone-frame">
+        <div class="status-notch">
+            <span>9:41</span>
+            <span>MinhaVoz Offline</span>
+            <span>100%</span>
+        </div>
+
+        <div class="grid-container" id="cardsGrid">
+            <!-- Os 8 cartoes serao gerados dinamicamente via JS -->
+        </div>
+
+        <div class="toast-msg" id="toastMsg">Mantenha pressionado por 1 segundo para chamar</div>
+
+        <!-- Tela Cheia de Detalhe -->
+        <div class="fullscreen-overlay" id="fullscreenOverlay">
+            <div class="overlay-center">
+                <div class="overlay-icon" id="overlayIcon"></div>
+                <h2 class="overlay-title" id="overlayTitle">ÁGUA</h2>
+                <p class="overlay-phrase" id="overlayPhrase">"Eu quero água, por favor."</p>
+                <div class="overlay-alarm-badge" id="overlayAlarmBadge">CICLO URGENTE ATIVO (20s)</div>
+            </div>
+
+            <div class="overlay-actions">
+                <button class="action-btn btn-repeat" id="btnRepeat" type="button">
+                    <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+                    <span>Repetir</span>
+                </button>
+                <button class="action-btn btn-close" id="btnClose" type="button">
+                    <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    <span>Fechar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CARTOES = [
+            {
+                id: 'agua',
+                label: 'Água',
+                phrase: 'Eu quero água, por favor.',
+                urgente: false,
+                colorClass: 'card-agua',
+                bgColor: '#1976D2',
+                textColor: '#ffffff',
+                svg: '<svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>'
+            },
+            {
+                id: 'comida',
+                label: 'Comida',
+                phrase: 'Eu quero comer, por favor.',
+                urgente: false,
+                colorClass: 'card-comida',
+                bgColor: '#F57C00',
+                textColor: '#ffffff',
+                svg: '<svg viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>'
+            },
+            {
+                id: 'remedio',
+                label: 'Remédio',
+                phrase: 'Preciso do meu remédio, por favor.',
+                urgente: false,
+                colorClass: 'card-remedio',
+                bgColor: '#7B1FA2',
+                textColor: '#ffffff',
+                svg: '<svg viewBox="0 0 24 24"><path d="M6 3h12v18H6z"/></svg>'
+            },
+            {
+                id: 'banheiro',
+                label: 'Banheiro',
+                phrase: 'Preciso ir ao banheiro urgente.',
+                urgente: true,
+                colorClass: 'card-banheiro',
+                bgColor: '#FBC02D',
+                textColor: '#111111',
+                svg: '<svg viewBox="0 0 24 24"><path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-6v13h-2v-6h-2v6H9V9H3V7h18v2z"/></svg>'
+            },
+            {
+                id: 'dor',
+                label: 'Dor',
+                phrase: 'Estou com dor, preciso de ajuda urgente.',
+                urgente: true,
+                colorClass: 'card-dor',
+                bgColor: '#D32F2F',
+                textColor: '#ffffff',
+                svg: '<svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>'
+            },
+            {
+                id: 'ajuda',
+                label: 'Ajuda',
+                phrase: 'Preciso de ajuda urgente, por favor.',
+                urgente: true,
+                colorClass: 'card-ajuda',
+                bgColor: '#C2185B',
+                textColor: '#ffffff',
+                svg: '<svg viewBox="0 0 24 24"><path d="M23 5.5V20c0 2.2-1.8 4-4 4h-7.3c-1.1 0-2.1-.4-2.8-1.2L1 14.8l1.4-1.4c.4-.4.9-.6 1.4-.6h.4L8 15V4c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5v6h1V2c0-.8.7-1.5 1.5-1.5S15 1.2 15 2v8h1V3.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5v7h1V5.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5z"/></svg>'
+            },
+            {
+                id: 'sim',
+                label: 'Sim',
+                phrase: 'Sim.',
+                urgente: false,
+                colorClass: 'card-sim',
+                bgColor: '#388E3C',
+                textColor: '#ffffff',
+                svg: '<svg viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>'
+            },
+            {
+                id: 'nao',
+                label: 'Não',
+                phrase: 'Não.',
+                urgente: false,
+                colorClass: 'card-nao',
+                bgColor: '#455A64',
+                textColor: '#ffffff',
+                svg: '<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>'
+            }
+        ];
+
+        // Estado do App
+        let activeCard = null;
+        let alarmInterval = null;
+        let autoCloseTimeout = null;
+        let audioContext = null;
+
+        // Sons de Sintese Vocal e Alarme
+        function playSpeech(phrase) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(phrase);
+                utter.lang = 'pt-BR';
+                utter.rate = 0.95;
+                utter.pitch = 1.0;
+                window.speechSynthesis.speak(utter);
+            }
+        }
+
+        function playSiren() {
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                osc.type = 'sawtooth';
+                const now = audioContext.currentTime;
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(500, now + 0.35);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.connect(gain);
+                gain.connect(audioContext.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Exibicao de Toast
+        let toastTimeout = null;
+        function showToast(msg) {
+            const toast = document.getElementById('toastMsg');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2200);
+        }
+
+        // Abertura de Tela Cheia
+        function openFullscreen(card) {
+            activeCard = card;
+            const overlay = document.getElementById('fullscreenOverlay');
+            const icon = document.getElementById('overlayIcon');
+            const title = document.getElementById('overlayTitle');
+            const phrase = document.getElementById('overlayPhrase');
+            const alarmBadge = document.getElementById('overlayAlarmBadge');
+
+            overlay.style.backgroundColor = card.bgColor;
+            overlay.style.color = card.textColor;
+            icon.innerHTML = card.svg;
+            title.textContent = card.label;
+            phrase.textContent = `"${card.phrase}"`;
+
+            overlay.classList.add('active');
+
+            // Falar frase
+            playSpeech(card.phrase);
+
+            // Gerenciar ciclo de urgencia
+            clearInterval(alarmInterval);
+            if (card.urgente) {
+                alarmBadge.style.display = 'block';
+                playSiren();
+                alarmInterval = setInterval(() => {
+                    playSiren();
+                    playSpeech(card.phrase);
+                }, 20000);
+            } else {
+                alarmBadge.style.display = 'none';
+            }
+
+            // Auto-fechamento apos 60s
+            clearTimeout(autoCloseTimeout);
+            autoCloseTimeout = setTimeout(() => {
+                closeFullscreen();
+            }, 60000);
+        }
+
+        function closeFullscreen() {
+            const overlay = document.getElementById('fullscreenOverlay');
+            overlay.classList.remove('active');
+            clearInterval(alarmInterval);
+            clearTimeout(autoCloseTimeout);
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            activeCard = null;
+        }
+
+        // Renderizacao dos cartoes
+        const grid = document.getElementById('cardsGrid');
+        CARTOES.forEach(card => {
+            const btn = document.createElement('button');
+            btn.className = `card-btn ${card.colorClass}`;
+            btn.type = 'button';
+
+            let badgeHtml = card.urgente ? '<span class="card-badge">Toque Longo</span>' : '';
+            let ringHtml = card.urgente ? `
+                <div class="progress-ring-container">
+                    <svg class="progress-ring-svg" viewBox="0 0 100 100">
+                        <circle class="progress-ring-circle" cx="50" cy="50" r="45"></circle>
+                    </svg>
+                </div>
+            ` : '';
+
+            btn.innerHTML = `
+                ${ringHtml}
+                <div class="card-icon">${card.svg}</div>
+                <div class="card-label">${card.label}</div>
+                ${badgeHtml}
+            `;
+
+            let pressTimer = null;
+            let didTrigger = false;
+
+            if (card.urgente) {
+                // Toque longo com 800ms
+                const startPress = (e) => {
+                    didTrigger = false;
+                    btn.classList.add('pressing');
+                    pressTimer = setTimeout(() => {
+                        didTrigger = true;
+                        btn.classList.remove('pressing');
+                        openFullscreen(card);
+                    }, 800);
+                };
+
+                const cancelPress = () => {
+                    clearTimeout(pressTimer);
+                    btn.classList.remove('pressing');
+                };
+
+                btn.addEventListener('mousedown', startPress);
+                btn.addEventListener('touchstart', startPress, { passive: true });
+
+                btn.addEventListener('mouseup', () => {
+                    if (!didTrigger) {
+                        showToast('Mantenha pressionado por 1 segundo para chamar');
+                    }
+                    cancelPress();
+                });
+
+                btn.addEventListener('mouseleave', cancelPress);
+                btn.addEventListener('touchend', () => {
+                    if (!didTrigger) {
+                        showToast('Mantenha pressionado por 1 segundo para chamar');
+                    }
+                    cancelPress();
+                });
+                btn.addEventListener('touchcancel', cancelPress);
+            } else {
+                // Toque simples
+                btn.addEventListener('click', () => {
+                    openFullscreen(card);
+                });
+            }
+
+            grid.appendChild(btn);
+        });
+
+        // Botoes da Tela Cheia
+        document.getElementById('btnRepeat').addEventListener('click', () => {
+            if (activeCard) {
+                if (activeCard.urgente) playSiren();
+                playSpeech(activeCard.phrase);
+            }
+        });
+
+        document.getElementById('btnClose').addEventListener('click', () => {
+            closeFullscreen();
+        });
+    </script>
+</body>
+</html>

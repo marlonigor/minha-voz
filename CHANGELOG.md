@@ -5,6 +5,14 @@ Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [Unreleased]
+
+### Adicionado
+- Persistencia local duravel com Room e SQLite para o catalogo de cartoes (ADR-002 V2).
+- Entidade CartaoEntity, DAO CartaoDao e RoomCartaoRepository com pre-povoamento transparente a partir de assets JSON.
+- Contrato estendido em CartaoRepository com suporte a atualizarFrase, salvar e remover.
+- Testes unitarios isolados com FakeCartaoDao cobrindo persistencia, mutacao e povoamento inicial.
+
 ## [0.1.0] - 2026-10-08
 
 ### Adicionado

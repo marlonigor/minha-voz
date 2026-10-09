@@ -35,4 +35,19 @@ interface CartaoRepository {
      * Busca um cartao pelo identificador unico.
      */
     fun obterPorId(id: String): Cartao?
+
+    /**
+     * Salva ou atualiza um cartao no repositorio persistente.
+     */
+    fun salvar(cartao: Cartao) {}
+
+    /**
+     * Atualiza a frase falada associada a um cartao.
+     */
+    fun atualizarFrase(id: String, novaFrase: String): Boolean = false
+
+    /**
+     * Remove um cartao pelo identificador unico.
+     */
+    fun remover(id: String): Boolean = false
 }
