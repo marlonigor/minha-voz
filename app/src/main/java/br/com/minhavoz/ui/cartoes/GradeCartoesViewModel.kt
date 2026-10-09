@@ -2,6 +2,7 @@ package br.com.minhavoz.ui.cartoes
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import br.com.minhavoz.core.audio.CartaoAudioPlayer
 import br.com.minhavoz.core.data.CartaoRepository
 import br.com.minhavoz.core.model.Cartao
 import br.com.minhavoz.core.model.NivelUrgencia
@@ -21,9 +22,11 @@ import kotlinx.coroutines.launch
  * - Bloqueio temporario de repeticao por 1.5s apos ativacao de cartao (RF-06).
  * - Exibicao e fechamento de cartao em tela cheia (RF-03).
  * - Fechamento automatico de 60s para normais e 5min para urgentes (RF-03).
+ * - Emissao sonora sincronizada e interrupcao de audio ao fechar (RF-04).
  */
 class GradeCartoesViewModel(
     private val cartaoRepository: CartaoRepository,
+    private val audioPlayer: CartaoAudioPlayer,
     private val debounceMs: Long = 1500L,
     private val tempoFechamentoNormalMs: Long = 60_000L,
     private val limiteUrgenteMs: Long = 300_000L
@@ -73,6 +76,7 @@ class GradeCartoesViewModel(
             )
         }
 
+        audioPlayer.reproduzir(cartao)
         iniciarDesbloqueioTemporizado()
         agendarFechamentoAutomatico(cartao)
     }
@@ -82,6 +86,7 @@ class GradeCartoesViewModel(
      */
     fun fecharDetalhe() {
         autoCloseJob?.cancel()
+        audioPlayer.parar()
         _uiState.update { estado ->
             estado.copy(cartaoEmDetalhe = null)
         }
@@ -92,10 +97,16 @@ class GradeCartoesViewModel(
      */
     fun repetirCartaoAtual() {
         val cartaoAtual: Cartao = _uiState.value.cartaoEmDetalhe ?: return
+        audioPlayer.reproduzir(cartaoAtual)
         agendarFechamentoAutomatico(cartaoAtual)
         _uiState.update { estado ->
             estado.copy(cartaoEmDetalhe = cartaoAtual)
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        audioPlayer.liberar()
     }
 
     private fun agendarFechamentoAutomatico(cartao: Cartao) {

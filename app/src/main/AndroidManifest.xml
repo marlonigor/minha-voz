@@ -4,6 +4,13 @@
     <!-- Conforme RNF-01: Proibido declarar permissao de internet. Operacao 100% offline. -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- Visibilidade de pacote para motores TextToSpeech nativos no Android 11+ (API 30+) -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@android:drawable/sym_def_app_icon"

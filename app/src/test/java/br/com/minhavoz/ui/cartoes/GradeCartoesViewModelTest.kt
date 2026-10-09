@@ -1,5 +1,6 @@
 package br.com.minhavoz.ui.cartoes
 
+import br.com.minhavoz.core.audio.FakeCartaoAudioPlayer
 import br.com.minhavoz.core.data.FakeCartaoRepository
 import br.com.minhavoz.core.model.Cartao
 import br.com.minhavoz.core.model.NivelUrgencia
@@ -21,13 +22,14 @@ import org.junit.Test
 
 /**
  * Testes unitarios para [GradeCartoesViewModel].
- * Valida carregamento inicial, fluxo de selecao, protecao de repeticao e fechamento automatico.
+ * Valida carregamento inicial, fluxo de selecao, protecao de repeticao, fechamento e audio.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class GradeCartoesViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private val repository = FakeCartaoRepository()
+    private val fakeAudioPlayer = FakeCartaoAudioPlayer()
 
     private val cartaoAgua = Cartao(
         id = "agua",
@@ -68,7 +70,7 @@ class GradeCartoesViewModelTest {
 
     @Test
     fun deveCarregarCartoesAoInicializar() {
-        val viewModel = GradeCartoesViewModel(repository)
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer)
         val estado = viewModel.uiState.value
 
         assertEquals(1, estado.cartoesGrade.size)
@@ -80,27 +82,30 @@ class GradeCartoesViewModelTest {
 
     @Test
     fun deveSelecionarCartaoEAtivarBloqueio() = runTest {
-        val viewModel = GradeCartoesViewModel(repository)
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer)
         viewModel.selecionarCartao(cartaoAgua)
 
         val estado = viewModel.uiState.value
         assertEquals("agua", estado.cartaoEmDetalhe?.id)
         assertTrue(estado.bloqueadoPorRepeticao)
+        assertEquals(1, fakeAudioPlayer.chamadasReproduzir.size)
+        assertEquals(cartaoAgua, fakeAudioPlayer.chamadasReproduzir.first())
     }
 
     @Test
     fun deveIgnorarNovoToqueDuranteBloqueioDeRepeticao() = runTest {
-        val viewModel = GradeCartoesViewModel(repository)
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer)
         viewModel.selecionarCartao(cartaoAgua)
         viewModel.selecionarCartao(cartaoSim)
 
         val estado = viewModel.uiState.value
         assertEquals("agua", estado.cartaoEmDetalhe?.id)
+        assertEquals(1, fakeAudioPlayer.chamadasReproduzir.size)
     }
 
     @Test
     fun deveLiberarBloqueioAposDebounce() = runTest {
-        val viewModel = GradeCartoesViewModel(repository, debounceMs = 1500L)
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer, debounceMs = 1500L)
         viewModel.selecionarCartao(cartaoAgua)
 
         assertTrue(viewModel.uiState.value.bloqueadoPorRepeticao)
@@ -109,18 +114,20 @@ class GradeCartoesViewModelTest {
     }
 
     @Test
-    fun deveFecharDetalheCorretamente() = runTest {
-        val viewModel = GradeCartoesViewModel(repository)
+    fun deveFecharDetalheEPararAudio() = runTest {
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer)
         viewModel.selecionarCartao(cartaoAgua)
         viewModel.fecharDetalhe()
 
         assertNull(viewModel.uiState.value.cartaoEmDetalhe)
+        assertEquals(1, fakeAudioPlayer.paradas)
     }
 
     @Test
     fun deveFecharCartaoNormalAutomaticamenteAposTimeout() = runTest {
         val viewModel = GradeCartoesViewModel(
             cartaoRepository = repository,
+            audioPlayer = fakeAudioPlayer,
             tempoFechamentoNormalMs = 1000L
         )
         viewModel.selecionarCartao(cartaoAgua)
@@ -131,9 +138,10 @@ class GradeCartoesViewModelTest {
     }
 
     @Test
-    fun deveReiniciarTimeoutAoRepetirCartao() = runTest {
+    fun deveReiniciarTimeoutERepetirAudioAoRepetirCartao() = runTest {
         val viewModel = GradeCartoesViewModel(
             cartaoRepository = repository,
+            audioPlayer = fakeAudioPlayer,
             tempoFechamentoNormalMs = 1000L
         )
         viewModel.selecionarCartao(cartaoAgua)
@@ -141,6 +149,7 @@ class GradeCartoesViewModelTest {
         testDispatcher.scheduler.advanceTimeBy(600L)
         viewModel.repetirCartaoAtual()
 
+        assertEquals(2, fakeAudioPlayer.chamadasReproduzir.size)
         testDispatcher.scheduler.advanceTimeBy(600L)
         assertNotNull(viewModel.uiState.value.cartaoEmDetalhe)
 
@@ -151,7 +160,7 @@ class GradeCartoesViewModelTest {
     @Test
     fun deveTratarErroDeCarregamento() {
         repository.deveLancarErro = true
-        val viewModel = GradeCartoesViewModel(repository)
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer)
 
         val estado = viewModel.uiState.value
         assertTrue(estado.cartoesGrade.isEmpty())
