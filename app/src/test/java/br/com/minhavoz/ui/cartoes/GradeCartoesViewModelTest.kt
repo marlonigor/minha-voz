@@ -1,6 +1,7 @@
 package br.com.minhavoz.ui.cartoes
 
 import br.com.minhavoz.core.audio.FakeCartaoAudioPlayer
+import br.com.minhavoz.core.audio.FakeGerenciadorChamadoUrgente
 import br.com.minhavoz.core.data.FakeCartaoRepository
 import br.com.minhavoz.core.model.Cartao
 import br.com.minhavoz.core.model.NivelUrgencia
@@ -30,6 +31,7 @@ class GradeCartoesViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private val repository = FakeCartaoRepository()
     private val fakeAudioPlayer = FakeCartaoAudioPlayer()
+    private val fakeGerenciadorUrgente = FakeGerenciadorChamadoUrgente()
 
     private val cartaoAgua = Cartao(
         id = "agua",
@@ -57,10 +59,23 @@ class GradeCartoesViewModelTest {
         barraFixa = true
     )
 
+    private val cartaoDor = Cartao(
+        id = "dor",
+        rotulo = "DOR",
+        frase = "Estou com dor. Preciso de ajuda.",
+        pictograma = "pictograma_dor",
+        corFundoHex = "#E53935",
+        corTextoHex = "#FFFFFF",
+        urgencia = NivelUrgencia.URGENTE,
+        arquivoVoz = "voz_dor.ogg",
+        posicao = 5,
+        barraFixa = false
+    )
+
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        repository.definirCartoes(listOf(cartaoAgua, cartaoSim))
+        repository.definirCartoes(listOf(cartaoAgua, cartaoSim, cartaoDor))
     }
 
     @After
@@ -70,10 +85,10 @@ class GradeCartoesViewModelTest {
 
     @Test
     fun deveCarregarCartoesAoInicializar() {
-        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer)
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer, fakeGerenciadorUrgente)
         val estado = viewModel.uiState.value
 
-        assertEquals(1, estado.cartoesGrade.size)
+        assertEquals(2, estado.cartoesGrade.size)
         assertEquals(1, estado.cartoesBarraFixa.size)
         assertEquals("agua", estado.cartoesGrade.first().id)
         assertEquals("sim", estado.cartoesBarraFixa.first().id)
@@ -81,8 +96,8 @@ class GradeCartoesViewModelTest {
     }
 
     @Test
-    fun deveSelecionarCartaoEAtivarBloqueio() = runTest {
-        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer)
+    fun deveSelecionarCartaoNormalEAtivarBloqueio() = runTest {
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer, fakeGerenciadorUrgente)
         viewModel.selecionarCartao(cartaoAgua)
 
         val estado = viewModel.uiState.value
@@ -93,8 +108,19 @@ class GradeCartoesViewModelTest {
     }
 
     @Test
+    fun deveIniciarCicloUrgenteAoSelecionarCartaoUrgente() = runTest {
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer, fakeGerenciadorUrgente)
+        viewModel.selecionarCartao(cartaoDor)
+
+        val estado = viewModel.uiState.value
+        assertEquals("dor", estado.cartaoEmDetalhe?.id)
+        assertEquals(1, fakeGerenciadorUrgente.chamadasIniciar.size)
+        assertEquals(cartaoDor, fakeGerenciadorUrgente.chamadasIniciar.first())
+    }
+
+    @Test
     fun deveIgnorarNovoToqueDuranteBloqueioDeRepeticao() = runTest {
-        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer)
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer, fakeGerenciadorUrgente)
         viewModel.selecionarCartao(cartaoAgua)
         viewModel.selecionarCartao(cartaoSim)
 
@@ -105,7 +131,12 @@ class GradeCartoesViewModelTest {
 
     @Test
     fun deveLiberarBloqueioAposDebounce() = runTest {
-        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer, debounceMs = 1500L)
+        val viewModel = GradeCartoesViewModel(
+            repository,
+            fakeAudioPlayer,
+            fakeGerenciadorUrgente,
+            debounceMs = 1500L
+        )
         viewModel.selecionarCartao(cartaoAgua)
 
         assertTrue(viewModel.uiState.value.bloqueadoPorRepeticao)
@@ -114,13 +145,14 @@ class GradeCartoesViewModelTest {
     }
 
     @Test
-    fun deveFecharDetalheEPararAudio() = runTest {
-        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer)
-        viewModel.selecionarCartao(cartaoAgua)
+    fun deveFecharDetalheEPararAudioECancelarCicloUrgente() = runTest {
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer, fakeGerenciadorUrgente)
+        viewModel.selecionarCartao(cartaoDor)
         viewModel.fecharDetalhe()
 
         assertNull(viewModel.uiState.value.cartaoEmDetalhe)
         assertEquals(1, fakeAudioPlayer.paradas)
+        assertEquals(1, fakeGerenciadorUrgente.cancelamentosContados)
     }
 
     @Test
@@ -128,6 +160,7 @@ class GradeCartoesViewModelTest {
         val viewModel = GradeCartoesViewModel(
             cartaoRepository = repository,
             audioPlayer = fakeAudioPlayer,
+            gerenciadorChamadoUrgente = fakeGerenciadorUrgente,
             tempoFechamentoNormalMs = 1000L
         )
         viewModel.selecionarCartao(cartaoAgua)
@@ -138,10 +171,11 @@ class GradeCartoesViewModelTest {
     }
 
     @Test
-    fun deveReiniciarTimeoutERepetirAudioAoRepetirCartao() = runTest {
+    fun deveReiniciarTimeoutERepetirAudioAoRepetirCartaoNormal() = runTest {
         val viewModel = GradeCartoesViewModel(
             cartaoRepository = repository,
             audioPlayer = fakeAudioPlayer,
+            gerenciadorChamadoUrgente = fakeGerenciadorUrgente,
             tempoFechamentoNormalMs = 1000L
         )
         viewModel.selecionarCartao(cartaoAgua)
@@ -158,9 +192,19 @@ class GradeCartoesViewModelTest {
     }
 
     @Test
+    fun deveReiniciarCicloUrgenteAoRepetirCartaoUrgente() = runTest {
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer, fakeGerenciadorUrgente)
+        viewModel.selecionarCartao(cartaoDor)
+        viewModel.repetirCartaoAtual()
+
+        assertEquals(1, fakeGerenciadorUrgente.chamadasReiniciar.size)
+        assertEquals(cartaoDor, fakeGerenciadorUrgente.chamadasReiniciar.first())
+    }
+
+    @Test
     fun deveTratarErroDeCarregamento() {
         repository.deveLancarErro = true
-        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer)
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer, fakeGerenciadorUrgente)
 
         val estado = viewModel.uiState.value
         assertTrue(estado.cartoesGrade.isEmpty())

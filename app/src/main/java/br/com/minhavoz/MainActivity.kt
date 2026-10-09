@@ -10,11 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import br.com.minhavoz.core.audio.AndroidControladorVolumeAlarme
 import br.com.minhavoz.core.audio.AndroidSintetizadorVoz
 import br.com.minhavoz.core.audio.AndroidVozGravadaPlayer
 import br.com.minhavoz.core.audio.AudioFocusController
 import br.com.minhavoz.core.audio.CartaoAudioPlayer
+import br.com.minhavoz.core.audio.GerenciadorChamadoUrgente
 import br.com.minhavoz.core.audio.OrquestradorAudioCartao
+import br.com.minhavoz.core.audio.PadraoGerenciadorChamadoUrgente
 import br.com.minhavoz.core.data.AssetJsonDataSource
 import br.com.minhavoz.core.data.JsonCartaoRepository
 import br.com.minhavoz.ui.cartoes.GradeCartoesScreen
@@ -30,8 +33,11 @@ class MainActivity : ComponentActivity() {
     private val viewModel: GradeCartoesViewModel by viewModels {
         val dataSource = AssetJsonDataSource(applicationContext, "cartoes.json")
         val repository = JsonCartaoRepository(dataSource)
-        val audioPlayer = criarAudioPlayer()
-        GradeCartoesViewModelFactory(repository, audioPlayer)
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        val audioFocusController = AudioFocusController(audioManager)
+        val audioPlayer = criarAudioPlayer(audioFocusController)
+        val gerenciadorUrgente = criarGerenciadorUrgente(audioPlayer, audioManager)
+        GradeCartoesViewModelFactory(repository, audioPlayer, gerenciadorUrgente)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,11 +52,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun criarAudioPlayer(): CartaoAudioPlayer {
-        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
-        val audioFocusController = AudioFocusController(audioManager)
+    private fun criarAudioPlayer(audioFocusController: AudioFocusController): CartaoAudioPlayer {
         val gravador = AndroidVozGravadaPlayer(applicationContext, audioFocusController)
         val sintetizador = AndroidSintetizadorVoz(applicationContext, audioFocusController)
         return OrquestradorAudioCartao(gravador, sintetizador)
+    }
+
+    private fun criarGerenciadorUrgente(
+        audioPlayer: CartaoAudioPlayer,
+        audioManager: AudioManager
+    ): GerenciadorChamadoUrgente {
+        val controladorVolume = AndroidControladorVolumeAlarme(audioManager)
+        return PadraoGerenciadorChamadoUrgente(audioPlayer, controladorVolume)
     }
 }

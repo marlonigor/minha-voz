@@ -2,6 +2,7 @@ package br.com.minhavoz.ui.cartoes
 
 import androidx.lifecycle.ViewModel
 import br.com.minhavoz.core.audio.FakeCartaoAudioPlayer
+import br.com.minhavoz.core.audio.FakeGerenciadorChamadoUrgente
 import br.com.minhavoz.core.data.FakeCartaoRepository
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertThrows
@@ -18,7 +19,8 @@ class GradeCartoesViewModelFactoryTest {
     fun deveCriarInstanciaDeGradeCartoesViewModel() {
         val fakeRepo = FakeCartaoRepository()
         val fakeAudio = FakeCartaoAudioPlayer()
-        val factory = GradeCartoesViewModelFactory(fakeRepo, fakeAudio)
+        val fakeUrgente = FakeGerenciadorChamadoUrgente()
+        val factory = GradeCartoesViewModelFactory(fakeRepo, fakeAudio, fakeUrgente)
 
         val vm: GradeCartoesViewModel = factory.create(GradeCartoesViewModel::class.java)
         assertNotNull(vm)
@@ -28,7 +30,8 @@ class GradeCartoesViewModelFactoryTest {
     fun deveLancarExcecaoParaViewModelDesconhecida() {
         val fakeRepo = FakeCartaoRepository()
         val fakeAudio = FakeCartaoAudioPlayer()
-        val factory = GradeCartoesViewModelFactory(fakeRepo, fakeAudio)
+        val fakeUrgente = FakeGerenciadorChamadoUrgente()
+        val factory = GradeCartoesViewModelFactory(fakeRepo, fakeAudio, fakeUrgente)
 
         assertThrows(IllegalArgumentException::class.java) {
             factory.create(OutraViewModel::class.java)
