@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -27,19 +28,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.minhavoz.core.feedback.ControladorFeedbackTatil
 import br.com.minhavoz.core.model.Cartao
 import br.com.minhavoz.core.model.NivelUrgencia
+import br.com.minhavoz.ui.feedback.LocalControladorFeedbackTatil
 
 /**
- * Componente visual para exibicao e interacao de um cartao de comunicacao com pictograma e texto.
+ * Componente visual para exibicao e interacao de um cartao com resposta visual e tatil imediata (RF-02, RF-07).
  */
 @Composable
 fun CartaoItemView(
@@ -47,12 +48,18 @@ fun CartaoItemView(
     onAtivar: (Cartao) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val haptic: HapticFeedback = LocalHapticFeedback.current
+    val feedbackTatil: ControladorFeedbackTatil = LocalControladorFeedbackTatil.current
     val fundo: Color = parseHexColor(cartao.corFundoHex)
     val textoCor: Color = parseHexColor(cartao.corTextoHex, Color.White)
     val interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
     val isPressed: Boolean by interactionSource.collectIsPressedAsState()
     val isUrgente: Boolean = cartao.urgencia == NivelUrgencia.URGENTE
+
+    val escala: Float by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = tween(durationMillis = 100),
+        label = "escalaToque"
+    )
 
     val progressoAnimado: Float by animateFloatAsState(
         targetValue = if (isPressed && isUrgente) 1f else 0f,
@@ -63,9 +70,18 @@ fun CartaoItemView(
     Box(
         modifier = modifier
             .defaultMinSize(minHeight = 96.dp)
+            .graphicsLayer {
+                scaleX = escala
+                scaleY = escala
+            }
             .clip(RoundedCornerShape(16.dp))
             .background(fundo)
-            .configurarClique(cartao, haptic, interactionSource, onAtivar)
+            .border(
+                width = if (isPressed) 3.dp else 0.dp,
+                color = textoCor.copy(alpha = 0.6f),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .configurarClique(cartao, feedbackTatil, interactionSource, onAtivar)
             .padding(10.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -80,7 +96,7 @@ fun CartaoItemView(
 @OptIn(ExperimentalFoundationApi::class)
 private fun Modifier.configurarClique(
     cartao: Cartao,
-    haptic: HapticFeedback,
+    feedbackTatil: ControladorFeedbackTatil,
     interactionSource: MutableInteractionSource,
     onAtivar: (Cartao) -> Unit
 ): Modifier {
@@ -90,13 +106,13 @@ private fun Modifier.configurarClique(
         indication = null,
         onClick = {
             if (!isUrgente) {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                feedbackTatil.vibrarToqueNormal()
                 onAtivar(cartao)
             }
         },
         onLongClick = {
             if (isUrgente) {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                feedbackTatil.vibrarChamadoUrgente()
                 onAtivar(cartao)
             }
         }

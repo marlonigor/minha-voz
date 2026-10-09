@@ -9,6 +9,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import br.com.minhavoz.core.audio.AndroidControladorVolumeAlarme
 import br.com.minhavoz.core.audio.AndroidSintetizadorVoz
@@ -20,9 +21,11 @@ import br.com.minhavoz.core.audio.OrquestradorAudioCartao
 import br.com.minhavoz.core.audio.PadraoGerenciadorChamadoUrgente
 import br.com.minhavoz.core.data.AssetJsonDataSource
 import br.com.minhavoz.core.data.JsonCartaoRepository
+import br.com.minhavoz.core.feedback.AndroidControladorFeedbackTatil
 import br.com.minhavoz.ui.cartoes.GradeCartoesScreen
 import br.com.minhavoz.ui.cartoes.GradeCartoesViewModel
 import br.com.minhavoz.ui.cartoes.GradeCartoesViewModelFactory
+import br.com.minhavoz.ui.feedback.LocalControladorFeedbackTatil
 
 /**
  * Ponto de entrada principal do aplicativo MinhaVoz.
@@ -43,10 +46,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val feedbackTatil = AndroidControladorFeedbackTatil(applicationContext)
         setContent {
             MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    GradeCartoesScreen(viewModel = viewModel)
+                CompositionLocalProvider(LocalControladorFeedbackTatil provides feedbackTatil) {
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        GradeCartoesScreen(viewModel = viewModel)
+                    }
                 }
             }
         }
