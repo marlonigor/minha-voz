@@ -16,6 +16,7 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Painel protegido do Modo Cuidador acessivel por toque longo de 3 segundos no canto superior esquerdo (RF-08, TC-27).
 - VerificadorRecursosVoz com inspecao defensiva de arquivos de audio gravados e motor TTS pt-BR ao iniciar (RF-09, TC-20).
 - Teste sonoro individual para cada cartao e visualizacao de parametros operacionais do sistema no Modo Cuidador.
+- Edicao de frases faladas dos cartoes diretamente pelo painel do Modo Cuidador, com persistencia duravel no Room.
 - Exibicao dos creditos de licenciamento dos pictogramas ARASAAC (CC BY-NC-SA) no Modo Cuidador (Secao 12 do PRD).
 
 ## [0.1.0] - 2026-10-08

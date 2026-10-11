@@ -33,4 +33,16 @@ class FakeCartaoRepository(
         if (deveLancarErro) throw IllegalStateException("Erro simulado no repositorio")
         return cartoes.firstOrNull { it.id == id }
     }
+
+    override fun atualizarFrase(id: String, novaFrase: String): Boolean {
+        if (deveLancarErro) throw IllegalStateException("Erro simulado no repositorio")
+        if (id.isBlank() || novaFrase.isBlank()) return false
+        val index = cartoes.indexOfFirst { it.id == id }
+        if (index == -1) return false
+        val cartaoAtualizado = cartoes[index].copy(frase = novaFrase.trim())
+        val listaAtualizada = cartoes.toMutableList()
+        listaAtualizada[index] = cartaoAtualizado
+        cartoes = listaAtualizada
+        return true
+    }
 }

@@ -94,6 +94,20 @@ class GradeCartoesViewModel(
     }
 
     /**
+     * Atualiza a frase personalizada do cartao persistida no Room e recarrega os dados (RF-08).
+     */
+    fun atualizarFraseCartao(id: String, novaFrase: String): Boolean {
+        if (id.isBlank() || novaFrase.isBlank()) {
+            return false
+        }
+        val sucesso: Boolean = cartaoRepository.atualizarFrase(id, novaFrase)
+        if (sucesso) {
+            carregarCartoes()
+        }
+        return sucesso
+    }
+
+    /**
      * Processa a ativacao de um cartao, aplicando bloqueio temporario e agendamento de fechamento.
      */
     fun selecionarCartao(cartao: Cartao) {

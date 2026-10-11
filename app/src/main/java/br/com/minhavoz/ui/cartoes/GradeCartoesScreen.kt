@@ -36,6 +36,7 @@ fun GradeCartoesScreen(
             relatorio = uiState.relatorioIntegridadeVoz,
             cartoes = uiState.cartoesGrade + uiState.cartoesBarraFixa,
             onTestarSom = { viewModel.testarSomCartao(it) },
+            onSalvarFrase = { cartao, novaFrase -> viewModel.atualizarFraseCartao(cartao.id, novaFrase) },
             onFechar = { viewModel.fecharModoCuidador() },
             modifier = modifier
         )

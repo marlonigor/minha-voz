@@ -248,4 +248,25 @@ class GradeCartoesViewModelTest {
         assertEquals(1, fakeAudioPlayer.chamadasReproduzir.size)
         assertEquals(cartaoAgua, fakeAudioPlayer.chamadasReproduzir.first())
     }
+
+    @Test
+    fun deveAtualizarFraseDoCartaoERecarregarListaComSucesso() {
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer, fakeGerenciadorUrgente)
+        val sucesso = viewModel.atualizarFraseCartao("agua", "Agua bem gelada, por favor")
+
+        assertTrue(sucesso)
+        val cartaoAtualizado = viewModel.uiState.value.cartoesGrade.find { it.id == "agua" }
+        assertEquals("Agua bem gelada, por favor", cartaoAtualizado?.frase)
+    }
+
+    @Test
+    fun deveRecusarAtualizacaoDeFraseEmBrancoOuIdInvalido() {
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer, fakeGerenciadorUrgente)
+
+        assertFalse(viewModel.atualizarFraseCartao("", "Nova frase"))
+        assertFalse(viewModel.atualizarFraseCartao("agua", "   "))
+
+        val cartaoOriginal = viewModel.uiState.value.cartoesGrade.find { it.id == "agua" }
+        assertEquals("Eu quero água, por favor.", cartaoOriginal?.frase)
+    }
 }

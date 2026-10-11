@@ -13,10 +13,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,16 +38,30 @@ import br.com.minhavoz.core.model.Cartao
  * Painel protegido do Modo Cuidador (RF-08, RF-09).
  *
  * Apresenta diagnostico tecnico dos arquivos de audio/TTS, testes individuais de som,
- * parametros operacionais do sistema e creditos de licenciamento dos pictogramas ARASAAC.
+ * edicao de frases faladas persistidas no SQLite local, parametros operacionais e creditos ARASAAC.
  */
 @Composable
 fun ModoCuidadorScreen(
     relatorio: RelatorioIntegridadeVoz?,
     cartoes: List<Cartao>,
     onTestarSom: (Cartao) -> Unit,
+    onSalvarFrase: (Cartao, String) -> Boolean = { _, _ -> false },
     onFechar: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var cartaoEmEdicao: Cartao? by remember { mutableStateOf(null) }
+
+    if (cartaoEmEdicao != null) {
+        DialogEdicaoFrase(
+            cartao = cartaoEmEdicao!!,
+            onSalvar = { novaFrase ->
+                onSalvarFrase(cartaoEmEdicao!!, novaFrase)
+                cartaoEmEdicao = null
+            },
+            onCancelar = { cartaoEmEdicao = null }
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -62,7 +83,8 @@ fun ModoCuidadorScreen(
                 ItemCartaoDiagnostico(
                     cartao = cartao,
                     status = status,
-                    onTestar = { onTestarSom(cartao) }
+                    onTestar = { onTestarSom(cartao) },
+                    onEditar = { cartaoEmEdicao = cartao }
                 )
             }
             item { SecaoParametrosSistema() }
@@ -136,7 +158,8 @@ private fun PainelResumoDiagnostico(relatorio: RelatorioIntegridadeVoz?) {
 private fun ItemCartaoDiagnostico(
     cartao: Cartao,
     status: StatusRecursoCartao?,
-    onTestar: () -> Unit
+    onTestar: () -> Unit,
+    onEditar: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -146,11 +169,31 @@ private fun ItemCartaoDiagnostico(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = cartao.rotulo, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            val gravado = if (status?.arquivoGravadoPresente == true) "Voz gravada OK" else "Sem arquivo (reserva TTS)"
-            Text(text = gravado, color = Color(0xFFA0A0B0), fontSize = 12.sp)
-        }
+        InfoCartaoDiagnostico(cartao = cartao, status = status, modifier = Modifier.weight(1f))
+        BotoesAcaoDiagnostico(onTestar = onTestar, onEditar = onEditar)
+    }
+}
+
+@Composable
+private fun InfoCartaoDiagnostico(
+    cartao: Cartao,
+    status: StatusRecursoCartao?,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.padding(end = 8.dp)) {
+        Text(text = cartao.rotulo, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        val gravado = if (status?.arquivoGravadoPresente == true) "Voz gravada OK" else "Sem arquivo (reserva TTS)"
+        Text(text = gravado, color = Color(0xFFA0A0B0), fontSize = 12.sp)
+        Text(text = "\"${cartao.frase}\"", color = Color(0xFFD0D0E0), fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun BotoesAcaoDiagnostico(
+    onTestar: () -> Unit,
+    onEditar: () -> Unit
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(
             onClick = onTestar,
             modifier = Modifier.height(44.dp),
@@ -158,6 +201,101 @@ private fun ItemCartaoDiagnostico(
             shape = RoundedCornerShape(8.dp)
         ) {
             Text(text = "OUVIR", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        }
+        Button(
+            onClick = onEditar,
+            modifier = Modifier.height(44.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A2A32)),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(text = "EDITAR", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun DialogEdicaoFrase(
+    cartao: Cartao,
+    onSalvar: (String) -> Unit,
+    onCancelar: () -> Unit
+) {
+    var textoFrase by remember { mutableStateOf(cartao.frase) }
+    var erroValidacao by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onCancelar,
+        containerColor = Color(0xFF1E1E24),
+        title = {
+            Text(
+                text = "EDITAR: ${cartao.rotulo.uppercase()}",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            ConteudoDialogEdicao(
+                textoFrase = textoFrase,
+                erroValidacao = erroValidacao,
+                onTextoAlterado = {
+                    textoFrase = it
+                    erroValidacao = it.isBlank()
+                }
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (textoFrase.isNotBlank()) onSalvar(textoFrase.trim()) else erroValidacao = true
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5)),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(text = "SALVAR", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onCancelar,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2A2A32)),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(text = "CANCELAR", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        }
+    )
+}
+
+@Composable
+private fun ConteudoDialogEdicao(
+    textoFrase: String,
+    erroValidacao: Boolean,
+    onTextoAlterado: (String) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = "Frase falada pelo app para este cartao:",
+            color = Color(0xFFA0A0B0),
+            fontSize = 13.sp
+        )
+        OutlinedTextField(
+            value = textoFrase,
+            onValueChange = onTextoAlterado,
+            modifier = Modifier.fillMaxWidth(),
+            isError = erroValidacao,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedBorderColor = Color(0xFF1E88E5),
+                unfocusedBorderColor = Color(0xFF505060)
+            )
+        )
+        if (erroValidacao) {
+            Text(
+                text = "A frase nao pode ficar em branco.",
+                color = Color(0xFFE53935),
+                fontSize = 12.sp
+            )
         }
     }
 }
