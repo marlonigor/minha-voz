@@ -210,4 +210,42 @@ class GradeCartoesViewModelTest {
         assertTrue(estado.cartoesGrade.isEmpty())
         assertNotNull(estado.erro)
     }
+
+    @Test
+    fun deveExecutarVerificacaoDeRecursosDeVozAoInicializar() {
+        val fakeVerificador = br.com.minhavoz.core.audio.FakeVerificadorRecursosVoz()
+        val viewModel = GradeCartoesViewModel(
+            cartaoRepository = repository,
+            audioPlayer = fakeAudioPlayer,
+            gerenciadorChamadoUrgente = fakeGerenciadorUrgente,
+            verificadorRecursosVoz = fakeVerificador
+        )
+
+        val estado = viewModel.uiState.value
+        assertEquals(1, fakeVerificador.chamadasVerificar)
+        assertNotNull(estado.relatorioIntegridadeVoz)
+        assertEquals(3, estado.relatorioIntegridadeVoz?.statusCartoes?.size)
+    }
+
+    @Test
+    fun deveAbrirEFecharModoCuidador() {
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer, fakeGerenciadorUrgente)
+        assertFalse(viewModel.uiState.value.modoCuidadorAberto)
+
+        viewModel.abrirModoCuidador()
+        assertTrue(viewModel.uiState.value.modoCuidadorAberto)
+
+        viewModel.fecharModoCuidador()
+        assertFalse(viewModel.uiState.value.modoCuidadorAberto)
+        assertEquals(2, fakeAudioPlayer.paradas)
+    }
+
+    @Test
+    fun deveTestarSomDoCartaoNoModoCuidador() {
+        val viewModel = GradeCartoesViewModel(repository, fakeAudioPlayer, fakeGerenciadorUrgente)
+        viewModel.testarSomCartao(cartaoAgua)
+
+        assertEquals(1, fakeAudioPlayer.chamadasReproduzir.size)
+        assertEquals(cartaoAgua, fakeAudioPlayer.chamadasReproduzir.first())
+    }
 }

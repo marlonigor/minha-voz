@@ -31,6 +31,17 @@ fun GradeCartoesScreen(
 ) {
     val uiState: GradeCartoesUiState by viewModel.uiState.collectAsState()
 
+    if (uiState.modoCuidadorAberto) {
+        br.com.minhavoz.ui.cuidador.ModoCuidadorScreen(
+            relatorio = uiState.relatorioIntegridadeVoz,
+            cartoes = uiState.cartoesGrade + uiState.cartoesBarraFixa,
+            onTestarSom = { viewModel.testarSomCartao(it) },
+            onFechar = { viewModel.fecharModoCuidador() },
+            modifier = modifier
+        )
+        return
+    }
+
     if (uiState.cartaoEmDetalhe != null) {
         CartaoDetalheTelaCheia(
             cartao = uiState.cartaoEmDetalhe!!,
@@ -44,6 +55,7 @@ fun GradeCartoesScreen(
     LayoutGradePrincipal(
         uiState = uiState,
         onSelecionarCartao = { viewModel.selecionarCartao(it) },
+        onAbrirModoCuidador = { viewModel.abrirModoCuidador() },
         modifier = modifier
     )
 }
@@ -52,28 +64,42 @@ fun GradeCartoesScreen(
 private fun LayoutGradePrincipal(
     uiState: GradeCartoesUiState,
     onSelecionarCartao: (Cartao) -> Unit,
+    onAbrirModoCuidador: () -> Unit,
     modifier: Modifier
 ) {
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFF121212))
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        if (uiState.erro != null) {
-            BannerErro(mensagem = uiState.erro)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            if (uiState.erro != null) {
+                BannerErro(mensagem = uiState.erro)
+            }
+
+            GradeMatrizCartoes(
+                cartoes = uiState.cartoesGrade,
+                onSelecionarCartao = onSelecionarCartao,
+                modifier = Modifier.weight(1f)
+            )
+
+            BarraFixaAcoes(
+                cartoes = uiState.cartoesBarraFixa,
+                onSelecionarCartao = onSelecionarCartao
+            )
         }
 
-        GradeMatrizCartoes(
-            cartoes = uiState.cartoesGrade,
-            onSelecionarCartao = onSelecionarCartao,
-            modifier = Modifier.weight(1f)
-        )
-
-        BarraFixaAcoes(
-            cartoes = uiState.cartoesBarraFixa,
-            onSelecionarCartao = onSelecionarCartao
+        br.com.minhavoz.ui.cuidador.AreaAcessoCuidador(
+            temAvisoTecnico = uiState.relatorioIntegridadeVoz?.possuiPendenciaCritica == true,
+            onAtivar = onAbrirModoCuidador,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(4.dp)
         )
     }
 }

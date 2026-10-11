@@ -29,6 +29,7 @@ class GradeCartoesViewModel(
     private val cartaoRepository: CartaoRepository,
     private val audioPlayer: CartaoAudioPlayer,
     private val gerenciadorChamadoUrgente: GerenciadorChamadoUrgente,
+    private val verificadorRecursosVoz: br.com.minhavoz.core.audio.VerificadorRecursosVoz? = null,
     private val debounceMs: Long = 1500L,
     private val tempoFechamentoNormalMs: Long = 60_000L,
     private val limiteUrgenteMs: Long = 300_000L
@@ -43,16 +44,18 @@ class GradeCartoesViewModel(
     }
 
     /**
-     * Carrega o catalogo de cartoes a partir do repositorio.
+     * Carrega o catalogo de cartoes e executa a checagem de recursos de voz (RF-01, RF-09).
      */
     fun carregarCartoes() {
         try {
             val grade: List<Cartao> = cartaoRepository.obterGrade()
             val barraFixa: List<Cartao> = cartaoRepository.obterBarraFixa()
+            val relatorio = verificadorRecursosVoz?.verificar(grade + barraFixa)
             _uiState.update { estado ->
                 estado.copy(
                     cartoesGrade = grade,
                     cartoesBarraFixa = barraFixa,
+                    relatorioIntegridadeVoz = relatorio,
                     erro = null
                 )
             }
@@ -61,6 +64,33 @@ class GradeCartoesViewModel(
                 estado.copy(erro = "Falha ao carregar catálogo: ${exception.message.orEmpty()}")
             }
         }
+    }
+
+    /**
+     * Abre a visualizacao do modo cuidador protegido (RF-08).
+     */
+    fun abrirModoCuidador() {
+        fecharDetalhe()
+        _uiState.update { estado ->
+            estado.copy(modoCuidadorAberto = true)
+        }
+    }
+
+    /**
+     * Fecha o modo cuidador e retorna para a grade inicial do paciente.
+     */
+    fun fecharModoCuidador() {
+        audioPlayer.parar()
+        _uiState.update { estado ->
+            estado.copy(modoCuidadorAberto = false)
+        }
+    }
+
+    /**
+     * Permite ao cuidador testar o som do cartao no painel de diagnostico (RF-08).
+     */
+    fun testarSomCartao(cartao: Cartao) {
+        audioPlayer.reproduzir(cartao)
     }
 
     /**

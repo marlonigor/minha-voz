@@ -16,5 +16,7 @@ data class GradeCartoesUiState(
     val cartoesBarraFixa: List<Cartao> = emptyList(),
     val cartaoEmDetalhe: Cartao? = null,
     val bloqueadoPorRepeticao: Boolean = false,
-    val erro: String? = null
+    val erro: String? = null,
+    val modoCuidadorAberto: Boolean = false,
+    val relatorioIntegridadeVoz: br.com.minhavoz.core.audio.RelatorioIntegridadeVoz? = null
 )

@@ -40,9 +40,11 @@ class MainActivity : ComponentActivity() {
         val repository = RoomCartaoRepository(database.cartaoDao(), dataSource)
         val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
         val audioFocusController = AudioFocusController(audioManager)
-        val audioPlayer = criarAudioPlayer(audioFocusController)
+        val sintetizador = AndroidSintetizadorVoz(applicationContext, audioFocusController)
+        val audioPlayer = criarAudioPlayer(audioFocusController, sintetizador)
         val gerenciadorUrgente = criarGerenciadorUrgente(audioPlayer, audioManager)
-        GradeCartoesViewModelFactory(repository, audioPlayer, gerenciadorUrgente)
+        val verificador = br.com.minhavoz.core.audio.AndroidVerificadorRecursosVoz(applicationContext, sintetizador)
+        GradeCartoesViewModelFactory(repository, audioPlayer, gerenciadorUrgente, verificador)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,9 +62,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun criarAudioPlayer(audioFocusController: AudioFocusController): CartaoAudioPlayer {
+    private fun criarAudioPlayer(
+        audioFocusController: AudioFocusController,
+        sintetizador: AndroidSintetizadorVoz
+    ): CartaoAudioPlayer {
         val gravador = AndroidVozGravadaPlayer(applicationContext, audioFocusController)
-        val sintetizador = AndroidSintetizadorVoz(applicationContext, audioFocusController)
         return OrquestradorAudioCartao(gravador, sintetizador)
     }
 

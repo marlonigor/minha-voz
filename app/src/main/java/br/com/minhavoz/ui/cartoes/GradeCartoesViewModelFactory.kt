@@ -12,13 +12,19 @@ import br.com.minhavoz.core.data.CartaoRepository
 class GradeCartoesViewModelFactory(
     private val cartaoRepository: CartaoRepository,
     private val audioPlayer: CartaoAudioPlayer,
-    private val gerenciadorChamadoUrgente: GerenciadorChamadoUrgente
+    private val gerenciadorChamadoUrgente: GerenciadorChamadoUrgente,
+    private val verificadorRecursosVoz: br.com.minhavoz.core.audio.VerificadorRecursosVoz? = null
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(GradeCartoesViewModel::class.java)) {
-            return GradeCartoesViewModel(cartaoRepository, audioPlayer, gerenciadorChamadoUrgente) as T
+            return GradeCartoesViewModel(
+                cartaoRepository = cartaoRepository,
+                audioPlayer = audioPlayer,
+                gerenciadorChamadoUrgente = gerenciadorChamadoUrgente,
+                verificadorRecursosVoz = verificadorRecursosVoz
+            ) as T
         }
         throw IllegalArgumentException("Classe ViewModel desconhecida: ${modelClass.name}")
     }
