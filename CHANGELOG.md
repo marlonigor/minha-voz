@@ -12,6 +12,7 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Entidade CartaoEntity, DAO CartaoDao e RoomCartaoRepository com pre-povoamento transparente a partir de assets JSON.
 - Contrato estendido em CartaoRepository com suporte a atualizarFrase, salvar e remover.
 - Testes unitarios isolados com FakeCartaoDao cobrindo persistencia, mutacao e povoamento inicial.
+- Testes de integracao com SQLite in-memory via Robolectric para o CartaoDao, validando integridade relacional, consultas da grade/barra fixa, transacoes em lote e concorrencia sob corrotinas.
 
 ## [0.1.0] - 2026-10-08
 
