@@ -20,7 +20,7 @@ import androidx.room.RoomDatabase
 @Database(
     entities = [CartaoEntity::class],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class MinhaVozDatabase : RoomDatabase() {
 
@@ -31,6 +31,9 @@ abstract class MinhaVozDatabase : RoomDatabase() {
 
         /**
          * Cria uma instancia de banco de dados SQLite persistente em disco.
+         *
+         * Regra de seguranca: fallbackToDestructiveMigration() e terminantemente proibido
+         * para impedir perda acidental de frases e cartoes personalizados pelo cuidador.
          */
         fun construir(context: Context, nomeBanco: String = NOME_BANCO): MinhaVozDatabase {
             return Room.databaseBuilder(

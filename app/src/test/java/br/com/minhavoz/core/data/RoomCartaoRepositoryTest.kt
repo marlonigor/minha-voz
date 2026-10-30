@@ -63,27 +63,34 @@ class RoomCartaoRepositoryTest {
     }
 
     @Test
-    fun naoDeveSobrescreverDadosSeDaoJaPossuiRegistros() {
-        val cartaoExistente = Cartao(
-            id = "personalizado",
-            rotulo = "FRIO",
-            frase = "Estou com frio.",
-            pictograma = "pictograma_frio",
-            corFundoHex = "#000000",
+    fun deveRepovoarApenasIdsAusentesSemSobrescreverFrasesEditadas() {
+        val cartaoAguaEditado = Cartao(
+            id = "agua",
+            rotulo = "ÁGUA",
+            frase = "Frase editada pelo cuidador.",
+            pictograma = "pictograma_agua",
+            corFundoHex = "#1E88E5",
             corTextoHex = "#FFFFFF",
             urgencia = NivelUrgencia.NORMAL,
-            arquivoVoz = "voz_frio.ogg",
-            posicao = 10,
+            arquivoVoz = "voz_agua.ogg",
+            posicao = 1,
             barraFixa = false
         )
-        fakeDao.inserir(br.com.minhavoz.core.data.local.CartaoEntity.fromDomain(cartaoExistente))
+        fakeDao.inserir(br.com.minhavoz.core.data.local.CartaoEntity.fromDomain(cartaoAguaEditado, personalizado = true))
 
         val dataSource = JsonDataSource { jsonExemplo }
         val repository = RoomCartaoRepository(fakeDao, dataSource)
 
         val todos = repository.obterTodos()
-        assertEquals(1, todos.size)
-        assertEquals("personalizado", todos[0].id)
+        assertEquals(2, todos.size)
+
+        val agua = repository.obterPorId("agua")
+        assertNotNull(agua)
+        assertEquals("Frase editada pelo cuidador.", agua?.frase)
+
+        val sim = repository.obterPorId("sim")
+        assertNotNull(sim)
+        assertEquals("Sim.", sim?.frase)
     }
 
     @Test

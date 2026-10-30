@@ -67,7 +67,7 @@ class RoomCartaoRepository(
     }
 
     private fun popularDadosIniciaisSeNecessario() {
-        if (cartaoDao.contar() > 0 || jsonDataSource == null) {
+        if (jsonDataSource == null) {
             return
         }
 
@@ -77,9 +77,14 @@ class RoomCartaoRepository(
         }
 
         val cartoesPadrao: List<Cartao> = jsonSerializer.decodeFromString(jsonString)
-        val entidades: List<CartaoEntity> = cartoesPadrao.map {
-            CartaoEntity.fromDomain(it, personalizado = false)
+        val idsExistentes: Set<String> = cartaoDao.obterTodos().map { it.id }.toSet()
+        val cartoesAusentes: List<Cartao> = cartoesPadrao.filter { it.id !in idsExistentes }
+
+        if (cartoesAusentes.isNotEmpty()) {
+            val entidades: List<CartaoEntity> = cartoesAusentes.map {
+                CartaoEntity.fromDomain(it, personalizado = false)
+            }
+            cartaoDao.inserirLoteInicial(entidades)
         }
-        cartaoDao.inserirLoteInicial(entidades)
     }
 }

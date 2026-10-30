@@ -5,7 +5,7 @@
 | Versão | 0.2 |
 | Data | 2026-10-07 |
 | Documentos relacionados | PRD v0.2 e ADR-001 a ADR-003 |
-| Responsável | Igor |
+| Responsável | Equipe MinhaVoz |
 
 ## 1. Objetivo
 

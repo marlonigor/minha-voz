@@ -6,9 +6,9 @@ Cada decisão tem registro próprio e pode mudar sem afetar as outras. Todos os 
 | :--- | :--- | :--- |
 | ADR-001 | Android nativo com Kotlin e Jetpack Compose | Proposto |
 | ADR-002 | Cartões em JSON nos assets, atrás de uma interface de repositório | Proposto |
-| ADR-003 | Voz gravada como principal, TTS de reserva e canal de alarme para urgentes | Proposto |
+| ADR-003 | Text-to-Speech pt-BR garantido, verificação de voz e evolução para gravações da família | Aceito |
 
-Data de todos os registros: 2026-10-07. Decisor: Igor.
+Data de todos os registros: 2026-10-07. Decisor: Equipe MinhaVoz.
 
 ---
 
@@ -67,33 +67,27 @@ Adotar Room quando o cadastro de cartões entrar no escopo.
 
 ---
 
-## ADR-003: Voz gravada como principal, TTS de reserva e canal de alarme para urgentes
+## ADR-003: Text-to-Speech pt-BR garantido, verificação de voz e evolução para gravações da família
 
 ### Contexto
 
-O paciente precisa ser entendido e ouvido em outros cômodos. A síntese de voz do Android depende do motor instalado e do pacote de português do Brasil, soa genérica e tem latência variável na primeira fala. O canal de alarme ignora o modo silencioso, mas obedece ao volume de alarme e é bloqueado pelo Não Perturbe em silêncio total.
+O paciente precisa ser entendido e ouvido em outros cômodos mesmo sem a presença física imediata de um cuidador. A versão 0.1.0 e os testes iniciais apontaram a necessidade de síntese sonora imediata e determinística, sem depender de arquivos de gravação pré-existentes para frases padrão ou editadas. Ao mesmo tempo, gravações da voz de familiares agregam identidade afetiva e conforto ao paciente.
 
 ### Decisão
 
-1. **Voz principal:** um arquivo `.ogg` gravado por um familiar para cada cartão, reproduzido com `MediaPlayer` e `AudioAttributes` definidos pelo nível de urgência.
-2. **Reserva:** `TextToSpeech` em português do Brasil, com os mesmos `AudioAttributes`, quando faltar o arquivo.
-3. **Cartões normais:** `USAGE_MEDIA`, com sinal curto de confirmação e voz.
-4. **Cartões urgentes:** `USAGE_ALARM`, com `alerta_urgente.ogg` seguido da voz. A sequência repete a cada 20 s, até 3 emissões, e o botão FECHAR cancela.
-5. **Volume:** antes de um chamado urgente, o app eleva o volume de alarme ao mínimo configurado (padrão de 80%) e restaura o valor anterior ao fim. A validação acontece no aparelho do paciente (TC-12). Se o sistema recusar o ajuste, o app toca no volume atual e registra o aviso no modo cuidador.
-6. **Foco de áudio:** pedir foco transitório antes de cada emissão, para pausar outros sons durante a fala.
-7. **Bluetooth e fones:** o MVP não resolve a rota de áudio por software. O resultado de TC-17 define a regra, e o item 4 da rotina diária do PRD cobre o risco.
+1. **Motor Garantido de Síntese:** Text-to-Speech (TTS) nativo do Android configurado obrigatoriamente para pt-BR (`Locale("pt", "BR")`), garantindo voz imediata ao abrir o aplicativo.
+2. **Verificação de Recursos de Voz:** Inspecção na inicialização (`VerificadorRecursosVoz`) para checar a presença do pacote de idioma pt-BR e integridade dos recursos, com diagnóstico visual no modo cuidador.
+3. **Plano B com Gravações nos Assets:** Suporte a arquivos `.ogg` nos assets para reprodução opcional ou fallback quando o motor TTS apresentar degradação.
+4. **Visão de Futuro (Voz Familiar):** Suporte à gravação e substituição da voz sintética por áudios gravados por parentes e cuidadores diretamente nos cartões personalizados, conferindo identidade própria à fala do aplicativo.
+5. **Canais e Urgência:** Cartões normais em `USAGE_MEDIA`. Cartões urgentes em `USAGE_ALARM`, elevando o volume antes da emissão sonoro e restaurando o patamar prévio ao término.
+6. **Comportamento com Volume Mudo:** O aplicativo monitora o estado de volume de mídia e emite alertas diagnósticos caso o som esteja mutado.
 
 ### Alternativas consideradas
 
-* **Apenas TTS.** Rejeitada como principal. Depende do motor do sistema, e uma voz familiar comunica melhor a urgência.
-* **Notificação com canal de importância alta.** Rejeitada. Fica sujeita às configurações do usuário e ao Não Perturbe.
+* **Apenas áudio gravado.** Rejeitada. Inviabiliza a edição dinâmica de frases e a criação ágil de novos cartões.
+* **Notificação do sistema.** Rejeitada. Fica sujeita a filtros de Não Perturbe e requer telas adicionais.
 
 ### Consequências
 
-* Positivas: não depende do motor de voz para o fluxo principal, voz conhecida pelo paciente, alerta audível mesmo com o aparelho no modo silencioso.
-* Negativas: exige gravar e manter 8 arquivos de voz. O Não Perturbe em silêncio total ainda bloqueia o alarme, e o volume de alarme baixo reduz o alcance. A configuração do aparelho e os testes TC-12 a TC-17 tratam desses riscos.
-* A promessa do app é reduzir falhas, e não eliminá-las. O plano B em papel permanece.
-
-### Condição de revisão
-
-Voltar ao TTS como voz principal se o piloto mostrar que a gravação é inviável ou que o paciente entende melhor a voz sintética.
+* Positivas: funcionamento imediato "out of the box", independência de gravação humana para vocabulário inicial ou frases editadas, e caminho evolutivo claro para voz familiar nos cartões customizados.
+* Negativas: dependência do mecanismo de TTS do Android estar com dados em português do Brasil instalados (mitigado pela verificação defensiva ao iniciar).

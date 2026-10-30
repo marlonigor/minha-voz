@@ -5,7 +5,7 @@
 | Versão | 0.2 |
 | Status | Rascunho. Aguarda revisão de fonoaudiólogo e teste com cartões em papel |
 | Data | 2026-10-07 |
-| Responsável | Igor |
+| Responsável | Equipe MinhaVoz |
 | Plataforma | Android nativo, operação offline |
 | Público | Pessoa com afasia expressiva pós-AVC e seus cuidadores |
 
@@ -170,8 +170,8 @@ As metas valem como ponto de partida e serão revisadas após o piloto.
 | :--- | :--- | :--- |
 | OQ-01 | Grade de 4 ou de 6 cartões | Teste em papel |
 | OQ-02 | Duração do toque longo | Teste com o paciente |
-| OQ-03 | Modelo e versão do Android do aparelho do paciente | Igor |
-| OQ-04 | Quem grava as vozes | Família |
+| OQ-03 | Modelo e versão do Android do aparelho do paciente | Equipe Técnica |
+| OQ-04 | Quem grava as vozes | Cuidadores / Familiares |
 | OQ-05 | Texto e pictograma juntos, ou apenas um deles | Fonoaudiólogo |
 
 ---
@@ -186,6 +186,14 @@ As metas valem como ponto de partida e serão revisadas após o piloto.
 
 ---
 
-## 12. Créditos
+## 12. Visão de Futuro
+
+* **Gravações da Família em Cartões Personalizados:** Substituição progressiva da voz sintética por gravações de familiares e cuidadores nos cartões personalizados. O paciente ouve a voz de um parente ao tocar no cartão, proporcionando identidade própria, conforto afetivo e maior adesão à ferramenta.
+* **Fotos e Imagens Próprias:** Associação de fotografias da família, objetos da casa e ambientes reais aos cartões customizados.
+* **Alerta Local em Rede sem Fio:** Notificação direta em dispositivos de cuidadores pela rede Wi-Fi residencial sem envio para a internet externa.
+
+---
+
+## 13. Créditos
 
 Pictogramas: ARASAAC (arasaac.org), propriedade do Governo de Aragão, autoria de Sergio Palao, distribuídos sob licença Creative Commons BY-NC-SA. O uso é pessoal e sem fins comerciais. O crédito aparece no modo cuidador.
