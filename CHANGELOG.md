@@ -5,7 +5,7 @@ Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
-## [Unreleased]
+## [0.2.0] - 2026-10-30
 
 ### Adicionado
 - Persistencia local duravel com Room e SQLite para o catalogo de cartoes (ADR-002 V2).
@@ -18,6 +18,18 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - Teste sonoro individual para cada cartao e visualizacao de parametros operacionais do sistema no Modo Cuidador.
 - Edicao de frases faladas dos cartoes diretamente pelo painel do Modo Cuidador, com persistencia duravel no Room.
 - Exibicao dos creditos de licenciamento dos pictogramas ARASAAC (CC BY-NC-SA) no Modo Cuidador (Secao 12 do PRD).
+- Testes automatizados de UI em Compose com MainTestClock cobrindo toque longo de 800 ms e debounce de 1500 ms.
+- Configuracao do Dependabot (.github/dependabot.yml) para monitoramento semanal de Gradle e GitHub Actions.
+
+### Modificado
+- Regra de fechamento dos cartoes de urgencia: mantidos abertos com alerta sonoro continuo ate fechamento manual explicito (removido auto-close temporizado para chamados criticos).
+- Pre-povoamento inteligente no Room: insere apenas IDs ausentes, preservando edicoes customizadas de frases pelo cuidador.
+- Dispatchers.IO obrigatorio nas operacoes de banco de dados para evitar violacao de main thread.
+- Versao da aplicacao atualizada para 0.2.0 no build.gradle.kts.
+
+### Seguranca
+- Ativacao de exportSchema no Room e teste formal de integridade com MigrationTestHelper, proibindo destruicao de dados em atualizacoes.
+- Higienizacao completa de dados sensiveis e identificadores pessoais em toda a pasta docs/.
 
 ## [0.1.0] - 2026-10-08
 

@@ -3,6 +3,9 @@ package br.com.minhavoz.core.data
 import br.com.minhavoz.core.data.local.CartaoDao
 import br.com.minhavoz.core.data.local.CartaoEntity
 import br.com.minhavoz.core.model.Cartao
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
 /**
@@ -25,45 +28,48 @@ class RoomCartaoRepository(
     private val jsonSerializer: Json = Json {
         ignoreUnknownKeys = true
         isLenient = false
-    }
+    },
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : CartaoRepository {
 
     init {
-        popularDadosIniciaisSeNecessario()
+        runBlocking(ioDispatcher) {
+            popularDadosIniciaisSeNecessario()
+        }
     }
 
-    override fun obterTodos(): List<Cartao> {
-        return cartaoDao.obterTodos().map { it.toDomain() }
+    override fun obterTodos(): List<Cartao> = runBlocking(ioDispatcher) {
+        cartaoDao.obterTodos().map { it.toDomain() }
     }
 
-    override fun obterGrade(): List<Cartao> {
-        return cartaoDao.obterGrade().map { it.toDomain() }
+    override fun obterGrade(): List<Cartao> = runBlocking(ioDispatcher) {
+        cartaoDao.obterGrade().map { it.toDomain() }
     }
 
-    override fun obterBarraFixa(): List<Cartao> {
-        return cartaoDao.obterBarraFixa().map { it.toDomain() }
+    override fun obterBarraFixa(): List<Cartao> = runBlocking(ioDispatcher) {
+        cartaoDao.obterBarraFixa().map { it.toDomain() }
     }
 
-    override fun obterPorId(id: String): Cartao? {
-        if (id.isBlank()) return null
-        return cartaoDao.obterPorId(id)?.toDomain()
+    override fun obterPorId(id: String): Cartao? = runBlocking(ioDispatcher) {
+        if (id.isBlank()) return@runBlocking null
+        cartaoDao.obterPorId(id)?.toDomain()
     }
 
-    override fun salvar(cartao: Cartao) {
+    override fun salvar(cartao: Cartao) = runBlocking(ioDispatcher) {
         val entidade = CartaoEntity.fromDomain(cartao, personalizado = true)
         cartaoDao.inserir(entidade)
     }
 
-    override fun atualizarFrase(id: String, novaFrase: String): Boolean {
-        if (id.isBlank() || novaFrase.isBlank()) return false
+    override fun atualizarFrase(id: String, novaFrase: String): Boolean = runBlocking(ioDispatcher) {
+        if (id.isBlank() || novaFrase.isBlank()) return@runBlocking false
         val linhasAfetadas: Int = cartaoDao.atualizarFrase(id, novaFrase.trim())
-        return linhasAfetadas > 0
+        linhasAfetadas > 0
     }
 
-    override fun remover(id: String): Boolean {
-        if (id.isBlank()) return false
+    override fun remover(id: String): Boolean = runBlocking(ioDispatcher) {
+        if (id.isBlank()) return@runBlocking false
         val linhasRemovidas: Int = cartaoDao.remover(id)
-        return linhasRemovidas > 0
+        linhasRemovidas > 0
     }
 
     private fun popularDadosIniciaisSeNecessario() {

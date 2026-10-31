@@ -172,14 +172,14 @@ class GradeCartoesViewModel(
 
     private fun agendarFechamentoAutomatico(cartao: Cartao) {
         autoCloseJob?.cancel()
-        val timeoutMs: Long = if (cartao.urgencia == NivelUrgencia.URGENTE) {
-            limiteUrgenteMs
-        } else {
-            tempoFechamentoNormalMs
+        if (cartao.urgencia == NivelUrgencia.URGENTE) {
+            // Conforme especificacao de seguranca: cartoes urgentes nao fecham sozinhos,
+            // permanecendo em exibicao e ciclo sonoro ate fechamento manual explicito.
+            return
         }
 
         autoCloseJob = viewModelScope.launch {
-            delay(timeoutMs)
+            delay(tempoFechamentoNormalMs)
             fecharDetalhe()
         }
     }

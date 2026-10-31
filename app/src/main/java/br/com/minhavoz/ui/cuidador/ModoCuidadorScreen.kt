@@ -45,9 +45,9 @@ fun ModoCuidadorScreen(
     relatorio: RelatorioIntegridadeVoz?,
     cartoes: List<Cartao>,
     onTestarSom: (Cartao) -> Unit,
-    onSalvarFrase: (Cartao, String) -> Boolean = { _, _ -> false },
     onFechar: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSalvarFrase: (Cartao, String) -> Boolean = { _, _ -> false }
 ) {
     var cartaoEmEdicao: Cartao? by remember { mutableStateOf(null) }
 

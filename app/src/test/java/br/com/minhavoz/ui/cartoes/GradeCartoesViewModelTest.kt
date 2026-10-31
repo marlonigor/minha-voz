@@ -171,6 +171,28 @@ class GradeCartoesViewModelTest {
     }
 
     @Test
+    fun naoDeveFecharCartaoUrgenteAutomaticamenteAposQualquerTempo() = runTest {
+        val viewModel = GradeCartoesViewModel(
+            cartaoRepository = repository,
+            audioPlayer = fakeAudioPlayer,
+            gerenciadorChamadoUrgente = fakeGerenciadorUrgente,
+            tempoFechamentoNormalMs = 1000L,
+            limiteUrgenteMs = 2000L
+        )
+        viewModel.selecionarCartao(cartaoDor)
+        assertNotNull(viewModel.uiState.value.cartaoEmDetalhe)
+
+        // Mesmo apos passar tempo superior a qualquer timeout, continua aberto
+        testDispatcher.scheduler.advanceTimeBy(10_000L)
+        assertNotNull(viewModel.uiState.value.cartaoEmDetalhe)
+        assertEquals(cartaoDor, viewModel.uiState.value.cartaoEmDetalhe)
+
+        // So fecha com acao explicita manual
+        viewModel.fecharDetalhe()
+        assertNull(viewModel.uiState.value.cartaoEmDetalhe)
+    }
+
+    @Test
     fun deveReiniciarTimeoutERepetirAudioAoRepetirCartaoNormal() = runTest {
         val viewModel = GradeCartoesViewModel(
             cartaoRepository = repository,
