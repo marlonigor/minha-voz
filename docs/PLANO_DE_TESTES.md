@@ -14,8 +14,11 @@ Validar três coisas, nesta ordem: o funcionamento técnico, o desempenho do áu
 ## 2. Ambiente
 
 * **Aparelho:** o mesmo modelo e a mesma versão do Android do paciente. Sem esse aparelho, os testes de áudio e latência não valem como aprovação.
+* **Separação de Camadas:**
+  * **Camada Automatizada (CI / JVM):** Robolectric e Compose Test Rule com `mainClock` validam lógica, persistência Room/SQLite, transições e temporizações determinísticas (800 ms de toque longo e 1,5 s de debounce).
+  * **Camada de Validação Física (Hardware Real):** Execução no aparelho físico para certificar sensibilidade da tela capacitiva, renderização com fontes ampliadas a 200%, drivers de áudio e vibração sob restrições do SO.
 * **Configuração:** a lista da seção 8 do PRD aplicada antes de cada rodada.
-* **Ferramentas:** Accessibility Scanner (Google), decibelímetro em outro celular, `adb` com `monkey` e `logcat`, gravação de tela.
+* **Ferramentas:** Accessibility Scanner (Google), decibelímetro em outro celular, `adb` com `monkey` e `logcat`, gravação de tela, TalkBack.
 * **Cômodos:** quarto, sala e cozinha da casa, com portas abertas e fechadas.
 * **Severidade dos defeitos:** alta quando o alerta urgente ou a voz falham, média quando o uso fica difícil, baixa quando o problema é estético.
 
@@ -66,6 +69,10 @@ Validar três coisas, nesta ordem: o funcionamento técnico, o desempenho do áu
 | TC-24 | RNF-02 | Registrar por `logcat` os horários do toque, da tela cheia e do início do áudio. 20 amostras. | Tela cheia em até 100 ms e áudio em até 500 ms, em mediana e no percentil 95. | [ ] |
 | TC-25 | Estabilidade geral | Rodar `adb shell monkey` com 5.000 eventos e fazer 200 ativações manuais seguidas. | Nenhum fechamento por erro. | [ ] |
 | TC-26 | RNF-03 | Deixar o app instalado em repouso por 24 h e consultar o consumo na ferramenta de bateria do Android. | Consumo abaixo de 1% da bateria. | [ ] |
+| TC-28 | RNF-04, RF-02 | Acessibilidade física com TalkBack: ativar TalkBack no sistema e navegar na grade por gestos de varredura. | Cada cartão anuncia o rótulo com clareza, identifica urgência e aceita toque duplo para ativar sem disparos acidentais. | [ ] |
+| TC-29 | RNF-04, RF-01 | Escala máxima de fonte (200%) e zoom de tela: configurar a fonte no patamar máximo e inspecionar em modo retrato e paisagem. | Nenhum texto truncado, pictograma visível, sem sobreposição e mantendo alvos mínimos de 96 dp sem rolagem. | [ ] |
+| TC-30 | RNF-03, RF-05 | Modo Economia de Bateria padrão e extrema ativado com carga < 20%. | Animações simplificadas, vibração tátil e áudio (TTS/alarme) operam sem cortes do sistema operacional. | [ ] |
+| TC-31 | RF-01, RF-03 | Rotação dinâmica do aparelho durante contagem de toque longo e durante tela cheia. | Transição suave de layout (2x3 para 3x2 e vice-versa), sem reinício indevido de áudio nem perda de estado. | [ ] |
 
 ---
 
@@ -99,8 +106,9 @@ O paciente participa porque quer. Antes de cada fase, explique o objetivo e perg
 
 | Etapa | Critério |
 | :--- | :--- |
-| Antes da Fase 1 | TC-01 a TC-27 executados, sem defeito de severidade alta aberto. |
+| Antes da Fase 1 | TC-01 a TC-31 executados, sem defeito de severidade alta aberto. |
 | Antes da Fase 1 | TC-14 e TC-15 aprovados: alerta audível a 5 m e identificado por 90% dos familiares. |
+| Antes da Fase 1 | TC-28 e TC-29 aprovados: acessibilidade TalkBack e escala 200% sem quebras de layout. |
 | Antes da Fase 1 | `monkey` e ativações manuais sem fechamento por erro (TC-25). |
 | Antes da Fase 1 | Fonoaudióloga revisou o vocabulário, ou a decisão de seguir sem a revisão está registrada no PRD. |
 | Antes da Fase 1 | Paciente concordou em participar. |
@@ -111,4 +119,4 @@ O paciente participa porque quer. Antes de cada fase, explique o objetivo e perg
 
 ## 8. Cobertura
 
-Todos os requisitos têm ao menos um caso: RF-01 (TC-08, TC-09), RF-02 (TC-01 a TC-04), RF-03 (TC-05 a TC-07, TC-19), RF-04 (TC-20), RF-05 (TC-12 a TC-16), RF-06 (TC-01), RF-07 (TC-03), RF-08 (TC-27), RF-09 (TC-20), RNF-01 (TC-21), RNF-02 (TC-24), RNF-03 (TC-26), mais estabilidade geral (TC-22, TC-23, TC-25), RNF-04 (TC-10, TC-11) e RNF-05 (custo, sem teste técnico).
+Todos os requisitos têm ao menos um caso: RF-01 (TC-08, TC-09, TC-29, TC-31), RF-02 (TC-01 a TC-04, TC-28), RF-03 (TC-05 a TC-07, TC-19, TC-31), RF-04 (TC-20), RF-05 (TC-12 a TC-16, TC-30), RF-06 (TC-01), RF-07 (TC-03), RF-08 (TC-27), RF-09 (TC-20), RNF-01 (TC-21), RNF-02 (TC-24), RNF-03 (TC-26, TC-30), mais estabilidade geral (TC-22, TC-23, TC-25), RNF-04 (TC-10, TC-11, TC-28, TC-29) e RNF-05 (custo, sem teste técnico).
