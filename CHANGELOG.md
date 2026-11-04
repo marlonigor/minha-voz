@@ -5,6 +5,12 @@ Todas as alterações notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/),
 e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [Unreleased]
+
+### Corrigido
+- Disponibilidade do esquema Room nos assets da variante release para os testes com Robolectric.
+- Registro do host Compose somente no ambiente de testes, permitindo executar os testes de UI em release sem adicionar uma Activity de teste ao aplicativo de producao.
+
 ## [0.2.0] - 2026-10-30
 
 ### Adicionado

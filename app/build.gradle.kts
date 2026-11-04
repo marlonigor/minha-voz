@@ -49,6 +49,10 @@ android {
         getByName("debug") {
             assets.srcDirs(files("$projectDir/schemas"))
         }
+        getByName("release") {
+            // Robolectric le os assets da variante testada (robolectric/robolectric#6650).
+            assets.srcDirs(files("$projectDir/schemas"))
+        }
         getByName("androidTest") {
             assets.srcDirs(files("$projectDir/schemas"))
         }

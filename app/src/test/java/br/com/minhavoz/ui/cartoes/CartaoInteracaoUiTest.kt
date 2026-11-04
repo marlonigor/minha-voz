@@ -6,6 +6,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import br.com.minhavoz.core.model.Cartao
 import br.com.minhavoz.core.model.NivelUrgencia
+import br.com.minhavoz.testing.ComposeHostActivityRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -26,7 +27,10 @@ import org.robolectric.annotation.Config
 @Config(sdk = [34])
 class CartaoInteracaoUiTest {
 
-    @get:Rule
+    @get:Rule(order = 0)
+    val composeHostActivityRule: ComposeHostActivityRule = ComposeHostActivityRule()
+
+    @get:Rule(order = 1)
     val composeTestRule = createComposeRule()
 
     private val cartaoNormal = Cartao(
