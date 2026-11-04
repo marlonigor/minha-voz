@@ -10,7 +10,7 @@ junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 kotlinxSerialization = "1.7.3"
 room = "2.6.1"
-ksp = "2.0.21-1.0.28"
+ksp = "2.3.13"
 robolectric = "4.14.1"
 
 [libraries]
